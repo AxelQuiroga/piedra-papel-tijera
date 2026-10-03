@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#0a0e1a" />
+  <meta name="description" content="Piedra, Papel o Tijera: un mini juego contra la CPU." />
+  <title>Piedra · Papel · Tijera</title>
+  <link rel="icon" type="image/svg+xml" href="assets/rock-svgrepo-com.svg" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main class="game">
+
+    <header class="game__header">
+      <h1 class="game__title">Piedra · Papel · Tijera</h1>
+      <p class="game__subtitle">Vos contra la máquina. Elegí con cabeza.</p>
+    </header>
+
+    <section class="scoreboard" aria-label="Marcador">
+      <div class="score score--player">
+        <span class="score__label">Vos</span>
+        <span class="score__value" id="score-player">0</span>
+      </div>
+      <div class="score score--draws">
+        <span class="score__label">Empates</span>
+        <span class="score__value" id="score-draws">0</span>
+      </div>
+      <div class="score score--cpu">
+        <span class="score__label">CPU</span>
+        <span class="score__value" id="score-cpu">0</span>
+      </div>
+    </section>
+
+    <section class="arena" id="arena" aria-label="Enfrentamiento">
+      <div class="hand hand--player" id="hand-player">
+        <span class="hand__side">Vos</span>
+        <div class="hand__card">
+          <div class="hand__flip">
+            <img class="hand__img" id="hand-player-img"
+                 src="assets/rock-svgrepo-com.svg" alt="" width="160" height="160" />
+          </div>
+        </div>
+        <span class="hand__choice" id="hand-player-choice">?</span>
+      </div>
+
+      <div class="arena__vs" aria-hidden="true">VS</div>
+
+      <div class="hand hand--cpu" id="hand-cpu">
+        <span class="hand__side">CPU</span>
+        <div class="hand__card">
+          <div class="hand__flip">
+            <img class="hand__img" id="hand-cpu-img"
+                 src="assets/rock-svgrepo-com.svg" alt="" width="160" height="160" />
+          </div>
+        </div>
+        <span class="hand__choice" id="hand-cpu-choice">?</span>
+      </div>
+    </section>
+
+    <p class="result" id="result" role="status" aria-live="polite">
+      <span class="result__title" id="result-title">¿Listo?</span>
+      <span class="result__detail" id="result-detail">Elegí tu jugada para empezar la ronda.</span>
+    </p>
+
+    <section class="choices" aria-label="Elegí tu jugada">
+      <button class="choice" type="button" data-choice="rock" aria-label="Elegir piedra">
+        <img class="choice__img" src="assets/rock-svgrepo-com.svg" alt="" width="56" height="56" />
+        <span class="choice__label">Piedra</span>
+      </button>
+      <button class="choice" type="button" data-choice="paper" aria-label="Elegir papel">
+        <img class="choice__img" src="assets/paper-svgrepo-com.svg" alt="" width="56" height="56" />
+        <span class="choice__label">Papel</span>
+      </button>
+      <button class="choice" type="button" data-choice="scissors" aria-label="Elegir tijera">
+        <img class="choice__img" src="assets/scissors-part-2-svgrepo-com.svg" alt="" width="56" height="56" />
+        <span class="choice__label">Tijera</span>
+      </button>
+    </section>
+
+    <button class="reset" id="reset" type="button">Reiniciar partida</button>
+
+  </main>
+</body>
+</html>

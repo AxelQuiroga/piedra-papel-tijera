@@ -1,0 +1,477 @@
+/* ============================================================
+   Piedra · Papel · Tijera — V1
+   1. Tokens   2. Base        3. Layout    4. Header
+   5. Marcador 6. Arena       7. Resultado 8. Jugadas
+   9. Reinicio 10. Animaciones 11. Accesibilidad / responsive
+   ============================================================ */
+
+/* ---------- 1. Tokens de diseño ---------- */
+:root {
+  --bg: #0a0e1a;
+  --surface: rgba(148, 163, 216, 0.07);
+  --surface-strong: rgba(148, 163, 216, 0.13);
+  --border: rgba(148, 163, 216, 0.16);
+  --text: #eef1fb;
+  --text-dim: #98a1c0;
+  --player: #22d3ee;
+  --cpu: #f472b6;
+  --win: #34d399;
+  --lose: #fb7185;
+  --draw: #fbbf24;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --shadow-lg: 0 20px 45px rgba(2, 6, 18, 0.55);
+  --font: "Segoe UI", system-ui, -apple-system, "Roboto", "Helvetica Neue", Arial, sans-serif;
+}
+
+/* ---------- 2. Base ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding-block: clamp(1rem, 4vh, 3rem);
+  font-family: var(--font);
+  color: var(--text);
+  background:
+    radial-gradient(55rem 38rem at 12% -10%, rgba(34, 211, 238, 0.13), transparent 60%),
+    radial-gradient(48rem 34rem at 112% 112%, rgba(244, 114, 182, 0.11), transparent 60%),
+    var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+/* ---------- 3. Layout ---------- */
+.game {
+  width: min(44rem, 100% - 2rem);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.9rem, 2.5vh, 1.4rem);
+  animation: rise-in 0.5s ease-out both;
+}
+
+/* ---------- 4. Header ---------- */
+.game__header {
+  text-align: center;
+}
+
+.game__title {
+  margin: 0;
+  font-size: clamp(1.7rem, 6vw, 2.6rem);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  background: linear-gradient(92deg, var(--player), #a78bfa 55%, var(--cpu));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.game__subtitle {
+  margin: 0.35rem 0 0;
+  color: var(--text-dim);
+  font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+}
+
+/* ---------- 5. Marcador ---------- */
+.scoreboard {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(12px);
+}
+
+.score {
+  text-align: center;
+}
+
+.score__label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.score__label::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.score--player .score__label {
+  color: var(--player);
+}
+
+.score--cpu .score__label {
+  color: var(--cpu);
+}
+
+.score__value {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: clamp(1.6rem, 5vw, 2.1rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.score__value--bump {
+  animation: score-bump 0.35s ease-out;
+}
+
+/* ---------- 6. Arena ---------- */
+.arena {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(0.6rem, 3vw, 1.4rem);
+}
+
+.hand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.hand__side {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.hand--player .hand__side {
+  color: var(--player);
+}
+
+.hand--cpu .hand__side {
+  color: var(--cpu);
+}
+
+.hand__card {
+  width: 100%;
+  max-width: 13.5rem;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(12px);
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s,
+    opacity 0.3s,
+    filter 0.3s,
+    transform 0.3s;
+}
+
+.hand__flip {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+/* La CPU "mira" hacia el jugador */
+.hand--cpu .hand__flip {
+  transform: scaleX(-1);
+}
+
+.hand__img {
+  width: 58%;
+  height: auto;
+  opacity: 0.45;
+  filter: drop-shadow(0 12px 20px rgba(2, 6, 18, 0.5));
+  transition: opacity 0.25s;
+}
+
+.arena.is-shaking .hand__img,
+.hand.is-revealed .hand__img {
+  opacity: 1;
+}
+
+/* Suspenso: ambos bombean con piedra (0.4s × 3 = 1.2s; ver SHAKE_MS en app.js) */
+.arena.is-shaking .hand__img {
+  animation: pump 0.4s ease-in-out 3;
+}
+
+/* Revelado con pop (debe quedar DESPUÉS de pump por igual especificidad) */
+.hand.is-revealed .hand__img {
+  animation: pop-in 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.35) both;
+}
+
+.hand.is-winner .hand__card {
+  border-color: rgba(52, 211, 153, 0.65);
+  box-shadow:
+    0 0 0 1px rgba(52, 211, 153, 0.45),
+    0 0 44px rgba(52, 211, 153, 0.25),
+    var(--shadow-lg);
+  transform: translateY(-4px);
+}
+
+.hand.is-loser .hand__card {
+  opacity: 0.45;
+  filter: grayscale(0.8);
+}
+
+.arena__vs {
+  width: clamp(2.4rem, 7vw, 3.1rem);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: clamp(0.75rem, 2.2vw, 0.9rem);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+}
+
+.hand__choice {
+  min-height: 1.3em;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.hand.is-revealed .hand__choice {
+  color: var(--text);
+}
+
+/* ---------- 7. Resultado ---------- */
+.result {
+  margin: 0;
+  min-height: 4.4rem; /* reserva espacio: evita saltos de layout */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2rem;
+  text-align: center;
+}
+
+.result__title {
+  font-size: clamp(1.3rem, 4.5vw, 1.7rem);
+  font-weight: 800;
+  transition: color 0.25s;
+}
+
+.result__title--in {
+  animation: fade-up 0.3s ease-out both;
+}
+
+.result--win .result__title {
+  color: var(--win);
+}
+
+.result--lose .result__title {
+  color: var(--lose);
+}
+
+.result--draw .result__title {
+  color: var(--draw);
+}
+
+.result__detail {
+  color: var(--text-dim);
+  font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+}
+
+/* ---------- 8. Botones de jugada ---------- */
+.choices {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(0.6rem, 2vw, 1rem);
+}
+
+.choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  padding: clamp(0.8rem, 2.5vw, 1.1rem) 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  backdrop-filter: blur(12px);
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.choice:hover:not(:disabled) {
+  transform: translateY(-4px);
+  border-color: rgba(34, 211, 238, 0.55);
+  background: var(--surface-strong);
+  box-shadow: 0 12px 28px rgba(34, 211, 238, 0.15);
+}
+
+.choice:active:not(:disabled) {
+  transform: translateY(-1px) scale(0.98);
+}
+
+.choice:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.choice__img {
+  width: clamp(2.3rem, 8vw, 3.2rem);
+  height: auto;
+}
+
+.choice__label {
+  font-size: clamp(0.78rem, 2.5vw, 0.9rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- 9. Reinicio ---------- */
+.reset {
+  align-self: center;
+  padding: 0.55rem 1.4rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    color 0.18s,
+    border-color 0.18s,
+    background 0.18s,
+    transform 0.18s;
+}
+
+.reset:hover {
+  color: var(--text);
+  border-color: rgba(238, 241, 251, 0.4);
+  background: var(--surface);
+  transform: translateY(-2px);
+}
+
+.reset:active {
+  transform: translateY(0);
+}
+
+/* ---------- 10. Animaciones ---------- */
+@keyframes pump {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(-13%) rotate(-3deg);
+  }
+  70% {
+    transform: translateY(3%);
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.07);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes score-bump {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.45);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- 11. Accesibilidad / responsive ---------- */
+.choice:focus-visible,
+.reset:focus-visible {
+  outline: 2px solid var(--player);
+  outline-offset: 3px;
+}
+
+@media (max-width: 26rem) {
+  .scoreboard {
+    padding: 0.7rem 0.6rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
