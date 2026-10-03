@@ -1,12 +1,12 @@
 'use strict';
 
 /* ============================================================
- * Piedra · Papel · Tijera — lógica del juego
+ * Piedra · Papel · Tijera — lógica del juego (V2)
  *
  * La lógica pura (randomChoice, getRoundResult) vive separada
  * del DOM: se puede razonar y testear sin navegador.
  * El flujo de la ronda es una máquina de estados:
- *   idle → shaking (suspenso) → reveal (resultado) → idle
+ *   idle → countdown (3·2·1·¡YA! + pump) → reveal → idle
  * ============================================================ */
 
 /* ---------- Configuración ---------- */
@@ -23,9 +23,10 @@ const BEATS = { rock: 'scissors', paper: 'rock', scissors: 'paper' };
 
 const ACTION_VERBS = { rock: 'aplasta a', paper: 'envuelve a', scissors: 'corta a' };
 
-/* Debe coincidir con la animación "pump" del CSS (0.4s × 3 vueltas) */
-const SHAKE_MS = 1200;
-const SHAKE_REDUCED_MS = 150;
+/* Cuenta regresiva; el pump del CSS es infinito y no necesita sincronización */
+const COUNTDOWN_STEPS = ['3', '2', '1', '¡YA!'];
+const COUNTDOWN_STEP_MS = 480;
+const COUNTDOWN_STEP_REDUCED_MS = 200;
 
 /* ---------- Estado ---------- */
 const state = { player: 0, cpu: 0, draws: 0, playing: false };
@@ -49,7 +50,9 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 
 /* ---------- Referencias al DOM ---------- */
 const els = {
+  game: document.querySelector('.game'),
   arena: document.getElementById('arena'),
+  countdown: document.getElementById('countdown'),
   handPlayer: document.getElementById('hand-player'),
   handCpu: document.getElementById('hand-cpu'),
   imgPlayer: document.getElementById('hand-player-img'),
@@ -101,16 +104,34 @@ function setHandCaption(side, text) {
   caption.textContent = text;
 }
 
+function showCountdownStep(text) {
+  els.countdown.textContent = text;
+  els.countdown.classList.toggle('countdown--ya', text === '¡YA!');
+  replayAnimation(els.countdown, 'is-live');
+}
+
+function hideCountdown() {
+  els.countdown.classList.remove('is-live', 'countdown--ya');
+  els.countdown.textContent = '';
+}
+
 function clearRoundMarks() {
   [els.handPlayer, els.handCpu].forEach((hand) =>
     hand.classList.remove('is-winner', 'is-loser', 'is-revealed')
   );
+  els.arena.classList.remove('arena--win', 'arena--lose', 'arena--draw');
+  els.choiceButtons.forEach((btn) => btn.classList.remove('is-selected'));
 }
 
 function setChoicesEnabled(enabled) {
   els.choiceButtons.forEach((btn) => {
     btn.disabled = !enabled;
   });
+}
+
+function markSelectedButton(playerChoice) {
+  const btn = els.choiceButtons.find((b) => b.dataset.choice === playerChoice);
+  if (btn) btn.classList.add('is-selected');
 }
 
 /* ---------- Ronda ---------- */
@@ -122,8 +143,9 @@ async function playRound(playerChoice) {
 
   const cpuChoice = randomChoice();
 
-  /* Fase 1 — suspenso: ambos bombean mostrando piedra */
+  /* Fase 1 — cuenta regresiva: ambos bombean mostrando piedra */
   clearRoundMarks();
+  markSelectedButton(playerChoice);
   setHandImage('player', 'rock');
   setHandImage('cpu', 'rock');
   setHandCaption('player', '?');
@@ -131,10 +153,18 @@ async function playRound(playerChoice) {
   showResult('idle', 'Piedra… papel…', '¡tijera!');
   els.arena.classList.add('is-shaking');
 
-  await wait(reducedMotion ? SHAKE_REDUCED_MS : SHAKE_MS);
-  if (token !== roundToken) return; // la partida se reinició en el medio
+  const stepMs = reducedMotion ? COUNTDOWN_STEP_REDUCED_MS : COUNTDOWN_STEP_MS;
+  for (const step of COUNTDOWN_STEPS) {
+    showCountdownStep(step);
+    await wait(stepMs);
+    if (token !== roundToken) {
+      hideCountdown();
+      return; // la partida se reinició en el medio
+    }
+  }
 
   /* Fase 2 — revelar jugadas y resolver */
+  hideCountdown();
   els.arena.classList.remove('is-shaking');
   setHandImage('player', playerChoice);
   setHandImage('cpu', cpuChoice);
@@ -144,6 +174,8 @@ async function playRound(playerChoice) {
   els.handCpu.classList.add('is-revealed');
 
   const outcome = getRoundResult(playerChoice, cpuChoice);
+  els.arena.classList.add(`arena--${outcome}`);
+  els.choiceButtons.forEach((btn) => btn.classList.remove('is-selected'));
 
   if (outcome === 'draw') {
     state.draws += 1;
@@ -169,6 +201,7 @@ async function playRound(playerChoice) {
       `${LABELS[cpuChoice]} ${ACTION_VERBS[cpuChoice]} ${LABELS[playerChoice]}.`
     );
     bumpScore(els.scoreCpu);
+    replayAnimation(els.game, 'game--shake');
   }
 
   renderScores();
@@ -184,7 +217,9 @@ function resetGame() {
   state.draws = 0;
   state.playing = false;
 
+  hideCountdown();
   els.arena.classList.remove('is-shaking');
+  els.game.classList.remove('game--shake');
   clearRoundMarks();
   setHandImage('player', 'rock');
   setHandImage('cpu', 'rock');

@@ -2,7 +2,7 @@
 
 Mini juego web contra la CPU, construido con **HTML, CSS y JavaScript vanilla** — sin frameworks, sin librerías, sin build. Diseño tipo arcade moderno: tema oscuro, glassmorphism y animaciones con puro CSS.
 
-![Captura del juego](test-results/v1-post-ronda.png)
+![Captura del juego](test-results/v2-win-desktop.png)
 
 ## Cómo jugar
 
@@ -20,9 +20,11 @@ python -m http.server 8000
 
 - Jugador vs CPU con elección aleatoria.
 - Marcador de rondas: victorias, empates y derrotas.
-- Animación de suspenso antes de revelar las jugadas ("piedra… papel… ¡tijera!").
+- Cuenta regresiva **3 · 2 · 1 · ¡YA!** gigante sobre la arena, con las manos bombeando.
+- Identidad visual "arena de neón": piso de grilla synthwave y marcos de esquina estilo fighting game (cian para vos, magenta para la CPU).
+- Cada resultado tiene su atmósfera: ganar inunda tu lado de verde y tu carta celebra; perder sacude la pantalla y hunde tu carta; empate pulsa ámbar.
 - Resultado de cada ronda con frase descriptiva ("Piedra aplasta a Tijera").
-- Feedback visual: ganador con resplandor, perdedor atenuado, marcador con animación.
+- Tu jugada queda resaltada durante la cuenta regresiva; botones táctiles estilo arcade.
 - Botón para reiniciar la partida (seguro incluso a mitad de ronda).
 - Responsive (desktop y mobile).
 
@@ -39,7 +41,7 @@ python -m http.server 8000
 ## Decisiones de diseño
 
 - **Lógica pura separada del DOM**: `getRoundResult()` y `randomChoice()` no tocan el documento, así que son triviales de testear.
-- **Máquina de estados de ronda**: `idle → shaking → reveal → idle`. Un `roundToken` invalida la ronda en curso si se reinicia a mitad de camino (no hay estados fantasma).
+- **Máquina de estados de ronda**: `idle → countdown → reveal → idle`. Un `roundToken` invalida la ronda en curso si se reinicia a mitad de camino (no hay estados fantasma).
 - **Los SVG se usan con `<img>`**: tienen colores fijos (no `currentColor`), así que inline no aportaría nada; con `<img>` son cacheables y el HTML queda limpio.
 - **Sin salto de layout**: la zona de resultado reserva su altura, el texto no empuja la interfaz.
 

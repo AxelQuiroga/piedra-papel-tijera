@@ -1,8 +1,9 @@
 /* ============================================================
-   Piedra · Papel · Tijera — V1
-   1. Tokens   2. Base        3. Layout    4. Header
-   5. Marcador 6. Arena       7. Resultado 8. Jugadas
-   9. Reinicio 10. Animaciones 11. Accesibilidad / responsive
+   Piedra · Papel · Tijera — V2 "Arena de neón"
+   1. Tokens   2. Base + piso synthwave   3. Layout   4. Header
+   5. Marcador 6. Arena (marcos, wash, cuenta regresiva)
+   7. Resultado 8. Jugadas  9. Reinicio
+   10. Animaciones  11. Accesibilidad / responsive
    ============================================================ */
 
 /* ---------- 1. Tokens de diseño ---------- */
@@ -46,6 +47,25 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Identidad: piso de grilla synthwave en perspectiva */
+body::before {
+  content: "";
+  position: fixed;
+  left: -25%;
+  right: -25%;
+  bottom: 0;
+  height: 38vh;
+  background:
+    repeating-linear-gradient(to top, rgba(34, 211, 238, 0.16) 0 2px, transparent 2px 42px),
+    repeating-linear-gradient(90deg, rgba(244, 114, 182, 0.10) 0 2px, transparent 2px 84px);
+  transform: perspective(520px) rotateX(56deg);
+  transform-origin: bottom;
+  mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent 85%);
+  -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent 85%);
+  pointer-events: none;
+  z-index: 0;
+}
+
 img {
   display: block;
   max-width: 100%;
@@ -58,11 +78,18 @@ button {
 
 /* ---------- 3. Layout ---------- */
 .game {
+  position: relative;
+  z-index: 1; /* por encima del piso */
   width: min(44rem, 100% - 2rem);
   display: flex;
   flex-direction: column;
   gap: clamp(0.9rem, 2.5vh, 1.4rem);
   animation: rise-in 0.5s ease-out both;
+}
+
+/* Sacudida de pantalla al perder (debe ir DESPUÉS de .game por la animation) */
+.game--shake {
+  animation: shake-screen 0.35s ease-in-out;
 }
 
 /* ---------- 4. Header ---------- */
@@ -72,13 +99,14 @@ button {
 
 .game__title {
   margin: 0;
-  font-size: clamp(1.7rem, 6vw, 2.6rem);
+  font-size: clamp(1.45rem, 6vw, 2.6rem);
   font-weight: 900;
   letter-spacing: 0.02em;
   background: linear-gradient(92deg, var(--player), #a78bfa 55%, var(--cpu));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  text-shadow: 0 0 34px rgba(167, 139, 250, 0.30);
 }
 
 .game__subtitle {
@@ -96,12 +124,16 @@ button {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(238, 241, 251, 0.06);
   backdrop-filter: blur(12px);
 }
 
 .score {
   text-align: center;
+}
+
+.score + .score {
+  border-left: 1px solid var(--border);
 }
 
 .score__label {
@@ -142,18 +174,47 @@ button {
 }
 
 .score__value--bump {
-  animation: score-bump 0.35s ease-out;
+  animation: score-bump 0.4s ease-out;
 }
 
 /* ---------- 6. Arena ---------- */
 .arena {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: clamp(0.6rem, 3vw, 1.4rem);
 }
 
+/* Atmósfera del resultado: wash de color sobre la arena */
+.arena::before {
+  content: "";
+  position: absolute;
+  inset: -8%;
+  border-radius: 28px;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  pointer-events: none;
+}
+
+.arena--win::before {
+  opacity: 1;
+  background: radial-gradient(60% 90% at 22% 50%, rgba(52, 211, 153, 0.20), transparent 70%);
+}
+
+.arena--lose::before {
+  opacity: 1;
+  background: radial-gradient(60% 90% at 78% 50%, rgba(251, 113, 133, 0.17), transparent 70%);
+}
+
+.arena--draw::before {
+  opacity: 1;
+  background: radial-gradient(55% 80% at 50% 50%, rgba(251, 191, 36, 0.14), transparent 70%);
+}
+
 .hand {
+  position: relative;
+  z-index: 1; /* sobre el wash */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -176,6 +237,7 @@ button {
 }
 
 .hand__card {
+  position: relative;
   width: 100%;
   max-width: 13.5rem;
   aspect-ratio: 1;
@@ -192,6 +254,42 @@ button {
     opacity 0.3s,
     filter 0.3s,
     transform 0.3s;
+}
+
+/* Marcos de esquina estilo fighting game (identidad) */
+.hand__card::before,
+.hand__card::after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  transition: border-color 0.3s;
+}
+
+.hand__card::before {
+  top: 10px;
+  left: 10px;
+  border-top: 3px solid;
+  border-left: 3px solid;
+  border-top-left-radius: 10px;
+}
+
+.hand__card::after {
+  bottom: 10px;
+  right: 10px;
+  border-bottom: 3px solid;
+  border-right: 3px solid;
+  border-bottom-right-radius: 10px;
+}
+
+.hand--player .hand__card::before,
+.hand--player .hand__card::after {
+  border-color: rgba(34, 211, 238, 0.55);
+}
+
+.hand--cpu .hand__card::before,
+.hand--cpu .hand__card::after {
+  border-color: rgba(244, 114, 182, 0.55);
 }
 
 .hand__flip {
@@ -212,6 +310,7 @@ button {
   opacity: 0.45;
   filter: drop-shadow(0 12px 20px rgba(2, 6, 18, 0.5));
   transition: opacity 0.25s;
+  animation: float 3.6s ease-in-out infinite;
 }
 
 .arena.is-shaking .hand__img,
@@ -219,9 +318,9 @@ button {
   opacity: 1;
 }
 
-/* Suspenso: ambos bombean con piedra (0.4s × 3 = 1.2s; ver SHAKE_MS en app.js) */
+/* Suspenso: bombean durante TODA la cuenta regresiva */
 .arena.is-shaking .hand__img {
-  animation: pump 0.4s ease-in-out 3;
+  animation: pump 0.4s ease-in-out infinite;
 }
 
 /* Revelado con pop (debe quedar DESPUÉS de pump por igual especificidad) */
@@ -235,12 +334,46 @@ button {
     0 0 0 1px rgba(52, 211, 153, 0.45),
     0 0 44px rgba(52, 211, 153, 0.25),
     var(--shadow-lg);
-  transform: translateY(-4px);
+  animation: champ-lift 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
+
+.hand.is-winner .hand__card::before,
+.hand.is-winner .hand__card::after {
+  border-color: var(--win);
 }
 
 .hand.is-loser .hand__card {
   opacity: 0.45;
   filter: grayscale(0.8);
+  transform: translateY(6px);
+}
+
+/* Cuenta regresiva 3 · 2 · 1 · ¡YA! */
+.countdown {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  font-size: clamp(4.2rem, 18vw, 8rem);
+  font-weight: 900;
+  line-height: 1;
+  background: linear-gradient(180deg, #ffffff, #9fb4ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 8px 40px rgba(2, 6, 18, 0.6);
+}
+
+.countdown--ya {
+  background: linear-gradient(180deg, #fde68a, var(--draw));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.countdown.is-live {
+  animation: countdown-pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
 }
 
 .arena__vs {
@@ -255,6 +388,8 @@ button {
   color: var(--text-dim);
   background: var(--surface-strong);
   border: 1px solid var(--border);
+  box-shadow: 0 0 0 4px rgba(148, 163, 216, 0.05), 0 0 24px rgba(167, 139, 250, 0.16);
+  animation: vs-pulse 2.6s ease-in-out infinite;
 }
 
 .hand__choice {
@@ -291,14 +426,17 @@ button {
 
 .result--win .result__title {
   color: var(--win);
+  text-shadow: 0 0 26px rgba(52, 211, 153, 0.35);
 }
 
 .result--lose .result__title {
   color: var(--lose);
+  text-shadow: 0 0 26px rgba(251, 113, 133, 0.30);
 }
 
 .result--draw .result__title {
   color: var(--draw);
+  text-shadow: 0 0 26px rgba(251, 191, 36, 0.30);
 }
 
 .result__detail {
@@ -321,16 +459,18 @@ button {
   padding: clamp(0.8rem, 2.5vw, 1.1rem) 0.5rem;
   background: var(--surface);
   border: 1px solid var(--border);
+  border-bottom: 3px solid rgba(148, 163, 216, 0.32); /* cuerpo de botón arcade */
   border-radius: var(--radius-md);
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   backdrop-filter: blur(12px);
   transition:
-    transform 0.18s ease,
-    border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    background 0.18s ease;
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    border-bottom-width 0.1s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
 }
 
 .choice:hover:not(:disabled) {
@@ -340,8 +480,13 @@ button {
   box-shadow: 0 12px 28px rgba(34, 211, 238, 0.15);
 }
 
+.choice:hover:not(:disabled) .choice__img {
+  filter: drop-shadow(0 6px 14px rgba(34, 211, 238, 0.35));
+}
+
 .choice:active:not(:disabled) {
-  transform: translateY(-1px) scale(0.98);
+  transform: translateY(1px);
+  border-bottom-width: 1px; /* se "hunde" como botón de arcade */
 }
 
 .choice:disabled {
@@ -349,9 +494,18 @@ button {
   cursor: not-allowed;
 }
 
+/* Tu jugada queda marcada durante la cuenta regresiva */
+.choice.is-selected {
+  opacity: 1;
+  border-color: var(--player);
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.45), 0 10px 26px rgba(34, 211, 238, 0.20);
+  transform: translateY(-2px);
+}
+
 .choice__img {
   width: clamp(2.3rem, 8vw, 3.2rem);
   height: auto;
+  transition: filter 0.15s ease;
 }
 
 .choice__label {
@@ -392,6 +546,15 @@ button {
 }
 
 /* ---------- 10. Animaciones ---------- */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4%);
+  }
+}
+
 @keyframes pump {
   0%, 100% {
     transform: translateY(0);
@@ -419,12 +582,67 @@ button {
   }
 }
 
+@keyframes champ-lift {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  55% {
+    transform: translateY(-10px) scale(1.03);
+  }
+  100% {
+    transform: translateY(-4px) scale(1);
+  }
+}
+
+@keyframes countdown-pop {
+  0% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(0.95);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shake-screen {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-7px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+@keyframes vs-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 4px rgba(148, 163, 216, 0.05), 0 0 24px rgba(167, 139, 250, 0.16);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(148, 163, 216, 0.03), 0 0 34px rgba(167, 139, 250, 0.28);
+  }
+}
+
 @keyframes score-bump {
   0% {
     transform: scale(1);
   }
   40% {
     transform: scale(1.45);
+    text-shadow: 0 0 20px currentColor;
   }
   100% {
     transform: scale(1);
@@ -463,6 +681,16 @@ button {
 @media (max-width: 26rem) {
   .scoreboard {
     padding: 0.7rem 0.6rem;
+  }
+
+  .hand__card::before,
+  .hand__card::after {
+    width: 14px;
+    height: 14px;
+  }
+
+  body::before {
+    height: 30vh;
   }
 }
 
