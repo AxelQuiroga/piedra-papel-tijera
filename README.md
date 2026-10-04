@@ -19,13 +19,17 @@ python -m http.server 8000
 ## Funcionalidades
 
 - Jugador vs CPU con elección aleatoria.
+- **Mejor de 5**: el primero en llegar a 3 victorias se lleva la partida. Los empates no cuentan: la ronda se repite.
+- **Pips de partida** bajo cada marcador (○○○ → ●●○), estilo fighting game.
+- **Pantalla de fin de partida** con overlay de victoria/derrota y botón "Jugar de nuevo"; las jugadas quedan bloqueadas.
+- **Sonido sintetizado con Web Audio API** (cero archivos): ticks en la cuenta, ¡YA!, whoosh de revelado, y jingles distintos para ganar, perder y empatar. Botón mute con preferencia guardada en `localStorage`.
 - Marcador de rondas: victorias, empates y derrotas.
 - Cuenta regresiva **3 · 2 · 1 · ¡YA!** gigante sobre la arena, con las manos bombeando.
 - Identidad visual "arena de neón": piso de grilla synthwave y marcos de esquina estilo fighting game (cian para vos, magenta para la CPU).
 - Cada resultado tiene su atmósfera: ganar inunda tu lado de verde y tu carta celebra; perder sacude la pantalla y hunde tu carta; empate pulsa ámbar.
 - Resultado de cada ronda con frase descriptiva ("Piedra aplasta a Tijera").
 - Tu jugada queda resaltada durante la cuenta regresiva; botones táctiles estilo arcade.
-- Botón para reiniciar la partida (seguro incluso a mitad de ronda).
+- Botón para reiniciar la partida (seguro incluso a mitad de ronda: cancela timers y sonidos).
 - Responsive (desktop y mobile).
 
 ## Estructura
@@ -33,14 +37,17 @@ python -m http.server 8000
 ```
 ├── index.html      # Estructura semántica y accesibilidad
 ├── style.css       # Diseño (tokens CSS, animaciones, responsive)
-├── app.js          # Lógica del juego
+├── app.js          # Lógica de ronda y de partida
+├── sound.js        # SoundEngine: sonidos sintetizados con Web Audio API
 ├── assets/         # Íconos SVG de piedra, papel y tijera
 └── test-results/   # Capturas de verificación visual
 ```
 
 ## Decisiones de diseño
 
-- **Lógica pura separada del DOM**: `getRoundResult()` y `randomChoice()` no tocan el documento, así que son triviales de testear.
+- **Lógica pura separada del DOM**: `getRoundResult()`, `randomChoice()` y `getMatchWinner()` no tocan el documento, así que son triviales de testear.
+- **Dos máquinas de estado**: la de ronda (`idle → countdown → reveal → idle`) vive dentro de la de partida (jugar hasta que alguien llega a 3). El ganador de la partida es **estado derivado** de los scores, no un flag guardado: no hay nada que sincronizar a mano.
+- **El sonido es un módulo aparte** (`sound.js`): el juego solo dice *qué* suena (`SoundEngine.play('win')`), nunca *cómo*. El `AudioContext` se crea con el primer gesto del usuario (política autoplay) y `stopAll()` garantiza que un reset no deje osciladores colgados. Export explícito a `window`: los `const` de tope nivel no cuelgan de `window` y el módulo quedaría inalcanzable desde tests externos.
 - **Máquina de estados de ronda**: `idle → countdown → reveal → idle`. Un `roundToken` invalida la ronda en curso si se reinicia a mitad de camino (no hay estados fantasma).
 - **Los SVG se usan con `<img>`**: tienen colores fijos (no `currentColor`), así que inline no aportaría nada; con `<img>` son cacheables y el HTML queda limpio.
 - **Sin salto de layout**: la zona de resultado reserva su altura, el texto no empuja la interfaz.
@@ -54,8 +61,9 @@ python -m http.server 8000
 
 ## Verificación
 
-- `node --check app.js` — sintaxis OK.
-- Capturas de flujo real en `test-results/` (ronda completa, layout desktop y mobile 390px sin overflow).
+- `node --check app.js sound.js` — sintaxis OK.
+- Batería funcional automatizada: **21/21 PASS** (`test-results/v3-tests.png`) — empates que no cuentan, bloqueo durante la ronda y tras el 3, reset a mitad de countdown sin estados ni sonidos colgados, "Jugar de nuevo", y mute persistente tras recargar.
+- Capturas de flujo real en `test-results/` (ronda completa, overlay de fin de partida en desktop y mobile 390px).
 
 ## Próximas iteraciones (ideas)
 

@@ -5,24 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
   <meta name="theme-color" content="#0a0e1a" />
-  <meta name="description" content="Piedra, Papel o Tijera: un mini juego contra la CPU." />
+  <meta name="description" content="Piedra, Papel o Tijera: un mini juego contra la CPU. Mejor de 5." />
   <title>Piedra · Papel · Tijera</title>
   <link rel="icon" type="image/svg+xml" href="assets/rock-svgrepo-com.svg" />
   <link rel="stylesheet" href="style.css" />
+  <script src="sound.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
+  <button class="mute" id="mute" type="button" aria-pressed="false" aria-label="Silenciar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M11 5 6 9H2v6h4l5 4V5z" fill="currentColor" stroke="none"></path>
+      <path class="mute__waves" d="M15.5 8.5a5 5 0 0 1 0 7M18.6 5.4a9.8 9.8 0 0 1 0 13.2"></path>
+      <line class="mute__slash" x1="2.5" y1="2.5" x2="21.5" y2="21.5"></line>
+    </svg>
+  </button>
+
   <main class="game">
 
     <header class="game__header">
       <h1 class="game__title">Piedra · Papel · Tijera</h1>
-      <p class="game__subtitle">Vos contra la máquina. Elegí con cabeza.</p>
+      <p class="game__subtitle">Mejor de 5: el primero en llegar a 3 se lleva la partida.</p>
     </header>
 
     <section class="scoreboard" aria-label="Marcador">
       <div class="score score--player">
         <span class="score__label">Vos</span>
         <span class="score__value" id="score-player">0</span>
+        <span class="score__pips" id="pips-player" aria-hidden="true">
+          <span class="pip"></span><span class="pip"></span><span class="pip"></span>
+        </span>
       </div>
       <div class="score score--draws">
         <span class="score__label">Empates</span>
@@ -31,6 +44,9 @@
       <div class="score score--cpu">
         <span class="score__label">CPU</span>
         <span class="score__value" id="score-cpu">0</span>
+        <span class="score__pips" id="pips-cpu" aria-hidden="true">
+          <span class="pip"></span><span class="pip"></span><span class="pip"></span>
+        </span>
       </div>
     </section>
 
@@ -85,5 +101,15 @@
     <button class="reset" id="reset" type="button">Reiniciar partida</button>
 
   </main>
+
+  <div class="match-end" id="match-end" role="dialog" aria-modal="true"
+       aria-labelledby="match-end-title" hidden>
+    <div class="match-end__panel">
+      <p class="match-end__title" id="match-end-title"></p>
+      <p class="match-end__detail" id="match-end-detail"></p>
+      <button class="match-end__again" id="match-end-again" type="button">Jugar de nuevo</button>
+    </div>
+  </div>
+
 </body>
 </html>
