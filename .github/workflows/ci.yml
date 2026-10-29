@@ -26,3 +26,4 @@ jobs:
           node --check app.js
           node --check sound.js
           node --check match-history.js
+          node --check match-session.js

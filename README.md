@@ -42,6 +42,7 @@ python -m http.server 8000
 ├── style.css       # Diseño (tokens CSS, animaciones, responsive)
 ├── app.js          # Coordinación de pantallas, rondas y partidas
 ├── match-history.js # Historial persistente y cálculo de estadísticas
+├── match-session.js # Ciclo de vida de partida y registro idempotente
 ├── tests/          # Pruebas unitarias con node:test
 ├── package.json    # Comando npm test sin dependencias externas
 ├── .github/workflows/ci.yml # Tests y chequeos de sintaxis
@@ -68,7 +69,7 @@ python -m http.server 8000
 
 ## Verificación
 
-- `npm test` — pruebas unitarias para historial, estadísticas acumuladas, rachas y persistencia.
+- `npm test` — 16 pruebas para historial, estadísticas acumuladas, rachas, persistencia, ciclo de vida de partidas y contratos de integración de la interfaz.
 - GitHub Actions ejecuta `npm test` y chequeos de sintaxis en cada push y pull request.
 - La captura `test-results/v3-tests.png` documenta la batería funcional previa del juego original.
 - Capturas de flujo real en `test-results/` (ronda completa, overlay de fin de partida en desktop y mobile 390px).

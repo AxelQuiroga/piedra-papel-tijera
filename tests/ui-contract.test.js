@@ -32,3 +32,16 @@ test('only the start menu is visible on first load', () => {
   assert.match(html, /<main class="game screen" id="game-screen" hidden>/);
   assert.match(html, /<section class="ranking screen" id="ranking-screen"[^>]*hidden/);
 });
+
+test('match lifecycle is wired to history persistence and storage warning UI', () => {
+  const sessionScript = html.indexOf('<script src="match-session.js" defer></script>');
+  const appScript = html.indexOf('<script src="app.js" defer></script>');
+
+  assert.notEqual(sessionScript, -1);
+  assert.ok(sessionScript < appScript);
+  assert.match(html, /id="storage-warning"[^>]*role="status"[^>]*aria-live="polite"[^>]*hidden/);
+  assert.match(app, /matchSession\.startMatch\(\)/);
+  assert.match(app, /matchSession\.abandonMatch\(\)/);
+  assert.match(app, /matchSession\.completeMatch\(/);
+  assert.match(app, /setStorageWarning\(!recordResult\.persisted\)/);
+});

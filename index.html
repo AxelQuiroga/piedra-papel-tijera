@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="style.css" />
   <script src="sound.js" defer></script>
   <script src="match-history.js" defer></script>
+  <script src="match-session.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -22,6 +23,8 @@
       <line class="mute__slash" x1="2.5" y1="2.5" x2="21.5" y2="21.5"></line>
     </svg>
   </button>
+
+  <p class="storage-warning" id="storage-warning" role="status" aria-live="polite" hidden></p>
 
   <main class="menu screen" id="main-menu" aria-labelledby="menu-title">
     <div class="menu__brand" aria-hidden="true">
