@@ -42,7 +42,9 @@ const REVEAL_PAUSE_REDUCED_MS = 100;
 
 /* ---------- Estado ---------- */
 const state = { player: 0, cpu: 0, draws: 0, playing: false };
-let roundToken = 0; // invalida una ronda en curso si se reinicia la partida
+let roundToken = 0;
+let matchHistory = MatchHistory.loadHistory();
+let currentMatchRecorded = false; // invalida una ronda en curso si se reinicia la partida
 
 /* ---------- Utilidades y lógica pura ---------- */
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -69,6 +71,22 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 
 /* ---------- Referencias al DOM ---------- */
 const els = {
+  menu: document.getElementById('main-menu'),
+  playButton: document.getElementById('play-button'),
+  rankingButton: document.getElementById('ranking-button'),
+  menuSummary: document.getElementById('menu-summary'),
+  rankingScreen: document.getElementById('ranking-screen'),
+  rankingMenuButton: document.getElementById('ranking-menu-button'),
+  gameMenuButton: document.getElementById('game-menu-button'),
+  rankingPlayed: document.getElementById('ranking-played'),
+  rankingWins: document.getElementById('ranking-wins'),
+  rankingLosses: document.getElementById('ranking-losses'),
+  rankingRate: document.getElementById('ranking-rate'),
+  rankingBestStreak: document.getElementById('ranking-best-streak'),
+  rankingDraws: document.getElementById('ranking-draws'),
+  rankingHistoryCount: document.getElementById('ranking-history-count'),
+  rankingEmpty: document.getElementById('ranking-empty'),
+  matchList: document.getElementById('match-list'),
   game: document.querySelector('.game'),
   arena: document.getElementById('arena'),
   countdown: document.getElementById('countdown'),
@@ -93,7 +111,68 @@ const els = {
   matchEndTitle: document.getElementById('match-end-title'),
   matchEndDetail: document.getElementById('match-end-detail'),
   matchAgain: document.getElementById('match-end-again'),
+  matchEndMenu: document.getElementById('match-end-menu'),
 };
+
+/* ---------- Navegación entre pantallas ---------- */
+function showScreen(screenName) {
+  els.menu.hidden = screenName !== 'menu';
+  els.game.hidden = screenName !== 'game';
+  els.rankingScreen.hidden = screenName !== 'ranking';
+
+  if (screenName === 'menu') els.playButton.focus({ preventScroll: true });
+  if (screenName === 'ranking') els.rankingMenuButton.focus({ preventScroll: true });
+  if (screenName === 'game') els.choiceButtons[0].focus({ preventScroll: true });
+}
+
+function updateMenuSummary() {
+  const summary = MatchHistory.summarizeHistory(matchHistory);
+  if (summary.matchesPlayed === 0) {
+    els.menuSummary.textContent = 'Tus partidas y resultados quedan guardados en este dispositivo.';
+    return;
+  }
+
+  els.menuSummary.textContent = `${summary.matchesPlayed} partidas jugadas · ${summary.matchesWon} victorias · ${summary.winRate}% de efectividad.`;
+}
+
+function renderRanking() {
+  const summary = MatchHistory.summarizeHistory(matchHistory);
+  els.rankingPlayed.textContent = summary.matchesPlayed;
+  els.rankingWins.textContent = summary.matchesWon;
+  els.rankingLosses.textContent = summary.matchesLost;
+  els.rankingRate.textContent = `${summary.winRate}%`;
+  els.rankingBestStreak.textContent = summary.bestWinStreak;
+  els.rankingDraws.textContent = summary.totalDraws;
+  els.rankingHistoryCount.textContent = `${matchHistory.length} ${matchHistory.length === 1 ? 'partida' : 'partidas'}`;
+  els.rankingEmpty.hidden = matchHistory.length > 0;
+  els.matchList.replaceChildren();
+
+  const dateFormatter = new Intl.DateTimeFormat('es-AR', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+
+  matchHistory.slice(0, 10).forEach((match) => {
+    const item = document.createElement('li');
+    item.className = `match-row match-row--${match.winner === 'player' ? 'win' : 'lose'}`;
+
+    const result = document.createElement('span');
+    result.className = 'match-row__result';
+    result.textContent = match.winner === 'player' ? 'Victoria' : 'Derrota';
+
+    const score = document.createElement('span');
+    score.className = 'match-row__score';
+    score.textContent = `${match.playerScore} – ${match.cpuScore}`;
+
+    const date = document.createElement('time');
+    date.className = 'match-row__date';
+    date.dateTime = match.playedAt;
+    date.textContent = dateFormatter.format(new Date(match.playedAt));
+
+    item.append(result, score, date);
+    els.matchList.append(item);
+  });
+}
 
 /* ---------- Render ---------- */
 function renderScores() {
@@ -285,6 +364,19 @@ function endMatch(winner) {
   state.playing = false;
   const playerWon = winner === 'player';
 
+  if (!currentMatchRecorded) {
+    matchHistory = MatchHistory.recordMatch(matchHistory, {
+      winner,
+      playerScore: state.player,
+      cpuScore: state.cpu,
+      draws: state.draws,
+    });
+    MatchHistory.saveHistory(matchHistory);
+    currentMatchRecorded = true;
+    renderRanking();
+    updateMenuSummary();
+  }
+
   SoundEngine.play(playerWon ? 'win' : 'lose');
 
   showResult(
@@ -307,12 +399,13 @@ function endMatch(winner) {
   els.matchAgain.focus();
 }
 
-function resetGame() {
+function resetGame({ focus = true } = {}) {
   roundToken += 1; // cancela cualquier ronda en curso
   state.player = 0;
   state.cpu = 0;
   state.draws = 0;
   state.playing = false;
+  currentMatchRecorded = false;
 
   SoundEngine.stopAll(); // no quedan sonidos colgados
   hideCountdown();
@@ -333,7 +426,12 @@ function resetGame() {
 
   /* Si el foco quedó en el botón del overlay (ahora oculto), se perdería
      al body: lo devolvemos a las jugadas para seguir con teclado */
-  els.choiceButtons[0].focus({ preventScroll: true });
+  if (focus) els.choiceButtons[0].focus({ preventScroll: true });
+}
+
+function returnToMenu() {
+  resetGame({ focus: false });
+  showScreen('menu');
 }
 
 /* ---------- Init ---------- */
@@ -345,6 +443,17 @@ els.choiceButtons.forEach((btn) =>
 );
 els.reset.addEventListener('click', resetGame);
 els.matchAgain.addEventListener('click', resetGame);
+els.playButton.addEventListener('click', () => {
+  resetGame({ focus: false });
+  showScreen('game');
+});
+els.rankingButton.addEventListener('click', () => {
+  renderRanking();
+  showScreen('ranking');
+});
+els.rankingMenuButton.addEventListener('click', () => showScreen('menu'));
+els.gameMenuButton.addEventListener('click', returnToMenu);
+els.matchEndMenu.addEventListener('click', returnToMenu);
 els.mute.addEventListener('click', () => {
   SoundEngine.unlock();
   SoundEngine.setMuted(!SoundEngine.isMuted());
@@ -353,3 +462,5 @@ els.mute.addEventListener('click', () => {
 renderMuteButton();
 renderScores();
 renderPips();
+renderRanking();
+updateMenuSummary();
