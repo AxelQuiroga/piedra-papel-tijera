@@ -93,13 +93,48 @@ const els = {
   matchEndTitle: document.getElementById('match-end-title'),
   matchEndDetail: document.getElementById('match-end-detail'),
   matchAgain: document.getElementById('match-end-again'),
+  statsMatches: document.getElementById('stats-matches'),
+  statsWins: document.getElementById('stats-wins'),
+  statsWinRate: document.getElementById('stats-win-rate'),
+  statsRoundWins: document.getElementById('stats-round-wins'),
+  statsBestStreak: document.getElementById('stats-best-streak'),
+  statsFavoriteMove: document.getElementById('stats-favorite-move'),
+  themeSelect: document.getElementById('theme-select'),
 };
+
+let personalStats = Statistics.loadStats();
 
 /* ---------- Render ---------- */
 function renderScores() {
   els.scorePlayer.textContent = state.player;
   els.scoreCpu.textContent = state.cpu;
   els.scoreDraws.textContent = state.draws;
+}
+
+function renderPersonalStats() {
+  els.statsMatches.textContent = personalStats.matchesPlayed;
+  els.statsWins.textContent = personalStats.matchesWon;
+  els.statsWinRate.textContent = `${Statistics.calculateWinRate(personalStats)}%`;
+  els.statsRoundWins.textContent = personalStats.roundWins;
+  els.statsBestStreak.textContent = personalStats.bestStreak;
+
+  const playedMoves = Object.entries(personalStats.moves).filter(([, count]) => count > 0);
+  if (playedMoves.length === 0) {
+    els.statsFavoriteMove.textContent = '—';
+    return;
+  }
+
+  const highestCount = Math.max(...playedMoves.map(([, count]) => count));
+  const mostUsed = playedMoves.filter(([, count]) => count === highestCount);
+  els.statsFavoriteMove.textContent = mostUsed.length === 1
+    ? LABELS[mostUsed[0][0]]
+    : 'Empate';
+}
+
+function applySavedTheme() {
+  const theme = Preferences.loadTheme();
+  document.documentElement.dataset.theme = theme;
+  els.themeSelect.value = theme;
 }
 
 function renderPips() {
@@ -263,6 +298,10 @@ async function playRound(playerChoice) {
     replayAnimation(els.game, 'game--shake');
   }
 
+  personalStats = Statistics.recordRound(personalStats, playerChoice, outcome);
+  Statistics.saveStats(personalStats);
+  renderPersonalStats();
+
   renderScores();
   renderPips();
 
@@ -283,6 +322,9 @@ async function playRound(playerChoice) {
  * ============================================================ */
 function endMatch(winner) {
   state.playing = false;
+  personalStats = Statistics.recordMatch(personalStats, winner);
+  Statistics.saveStats(personalStats);
+  renderPersonalStats();
   const playerWon = winner === 'player';
 
   SoundEngine.play(playerWon ? 'win' : 'lose');
@@ -350,6 +392,14 @@ els.mute.addEventListener('click', () => {
   SoundEngine.setMuted(!SoundEngine.isMuted());
   renderMuteButton();
 });
+els.themeSelect.addEventListener('change', () => {
+  const theme = els.themeSelect.value;
+  if (Preferences.saveTheme(theme)) {
+    document.documentElement.dataset.theme = theme;
+  }
+});
+applySavedTheme();
+renderPersonalStats();
 renderMuteButton();
 renderScores();
 renderPips();
