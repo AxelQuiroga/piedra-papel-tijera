@@ -95,12 +95,6 @@ function summarizeHistory(history) {
   }
   summary.currentWinStreak = streak;
 
-  for (const match of [...matches].reverse()) {
-    if (match.winner === 'player') {
-      streak = streak === summary.currentWinStreak ? streak : streak;
-    }
-  }
-
   streak = 0;
   for (const match of [...matches].reverse()) {
     if (match.winner === 'player') {
