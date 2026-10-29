@@ -10,6 +10,8 @@
   <link rel="icon" type="image/svg+xml" href="assets/rock-svgrepo-com.svg" />
   <link rel="stylesheet" href="style.css" />
   <script src="sound.js" defer></script>
+  <script src="statistics.js" defer></script>
+  <script src="preferences.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -99,6 +101,56 @@
     </section>
 
     <button class="reset" id="reset" type="button">Reiniciar partida</button>
+
+    <section class="extras" aria-label="Estadísticas y personalización">
+      <section class="personal-stats" aria-labelledby="personal-stats-title">
+        <div class="extras__heading">
+          <h2 id="personal-stats-title">Tus estadísticas</h2>
+          <span class="extras__eyebrow">GUARDADAS EN ESTE DISPOSITIVO</span>
+        </div>
+        <dl class="stats-grid">
+          <div class="stat">
+            <dt>Partidas</dt>
+            <dd id="stats-matches">0</dd>
+          </div>
+          <div class="stat">
+            <dt>Victorias</dt>
+            <dd id="stats-wins">0</dd>
+          </div>
+          <div class="stat">
+            <dt>Efectividad</dt>
+            <dd id="stats-win-rate">0%</dd>
+          </div>
+          <div class="stat">
+            <dt>Rondas ganadas</dt>
+            <dd id="stats-round-wins">0</dd>
+          </div>
+          <div class="stat">
+            <dt>Mejor racha</dt>
+            <dd id="stats-best-streak">0</dd>
+          </div>
+          <div class="stat">
+            <dt>Jugada favorita</dt>
+            <dd id="stats-favorite-move">—</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="personalization" aria-labelledby="personalization-title">
+        <div class="extras__heading">
+          <h2 id="personalization-title">Personalización</h2>
+          <span class="extras__eyebrow">ELEGÍ TU ARENA</span>
+        </div>
+        <label class="theme-control" for="theme-select">
+          <span>Paleta visual</span>
+          <select id="theme-select">
+            <option value="neon">Neón clásico</option>
+            <option value="ember">Fuego arcade</option>
+            <option value="matrix">Matriz digital</option>
+          </select>
+        </label>
+      </section>
+    </section>
 
   </main>
 
