@@ -23,9 +23,6 @@ const ASSETS = {
 
 const LABELS = { rock: 'Piedra', paper: 'Papel', scissors: 'Tijera' };
 
-/* BEATS[x] = a quién le gana x */
-const BEATS = { rock: 'scissors', paper: 'rock', scissors: 'paper' };
-
 const ACTION_VERBS = { rock: 'aplasta a', paper: 'envuelve a', scissors: 'corta a' };
 
 /* Mejor de 5 = el primero en llegar a 3 victorias de ronda */
@@ -46,24 +43,6 @@ let roundToken = 0; // invalida una ronda en curso si se reinicia la partida
 
 /* ---------- Utilidades y lógica pura ---------- */
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const randomChoice = () => {
-  const keys = Object.keys(ASSETS);
-  return keys[Math.floor(Math.random() * keys.length)];
-};
-
-/* 'win' | 'lose' | 'draw' desde la perspectiva del jugador */
-const getRoundResult = (player, cpu) => {
-  if (player === cpu) return 'draw';
-  return BEATS[player] === cpu ? 'win' : 'lose';
-};
-
-/* 'player' | 'cpu' | null — la partida se DERIVA de los scores */
-const getMatchWinner = () => {
-  if (state.player >= TARGET_WINS) return 'player';
-  if (state.cpu >= TARGET_WINS) return 'cpu';
-  return null;
-};
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -222,12 +201,12 @@ function renderMuteButton() {
  * Nivel RONDA
  * ============================================================ */
 async function playRound(playerChoice) {
-  if (state.playing || getMatchWinner()) return;
+  if (state.playing || GameLogic.getMatchWinner(state.player, state.cpu, TARGET_WINS)) return;
   state.playing = true;
   const token = ++roundToken;
   setChoicesEnabled(false);
 
-  const cpuChoice = randomChoice();
+  const cpuChoice = GameLogic.randomChoice();
 
   /* Fase 1 — cuenta regresiva con sonido por paso */
   clearRoundMarks();
@@ -266,7 +245,7 @@ async function playRound(playerChoice) {
   if (token !== roundToken) return;
 
   /* Fase 3 — veredicto de la ronda */
-  const outcome = getRoundResult(playerChoice, cpuChoice);
+  const outcome = GameLogic.getRoundResult(playerChoice, cpuChoice);
   els.arena.classList.add(`arena--${outcome}`);
 
   if (outcome === 'draw') {
@@ -306,7 +285,7 @@ async function playRound(playerChoice) {
   renderPips();
 
   /* Si la ronda cierra la partida, el nivel PARTIDA toma el control */
-  const winner = getMatchWinner();
+  const winner = GameLogic.getMatchWinner(state.player, state.cpu, TARGET_WINS);
   if (winner) {
     endMatch(winner);
     return;
