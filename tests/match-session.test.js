@@ -3,6 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const MatchSession = require('../match-session.js');
+const MatchHistory = require('../match-history.js');
 
 const completedMatch = {
   winner: 'player',
@@ -17,6 +18,7 @@ function createSession({ saveResult = true } = {}) {
   let saveCalls = 0;
   const session = MatchSession.create({
     initialHistory: [],
+    recordMatch: MatchHistory.recordMatch,
     saveHistory(history) {
       saveCalls += 1;
       if (saveResult) savedHistory = history;
