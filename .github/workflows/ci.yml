@@ -24,6 +24,7 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check app.js
+          node --check game-logic.js
           node --check sound.js
           node --check statistics.js
           node --check preferences.js
