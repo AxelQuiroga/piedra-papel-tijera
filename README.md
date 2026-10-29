@@ -37,15 +37,22 @@ python -m http.server 8000
 ```
 ├── index.html      # Estructura semántica y accesibilidad
 ├── style.css       # Diseño (tokens CSS, animaciones, responsive)
-├── app.js          # Lógica de ronda y de partida
+├── app.js          # Orquestación de ronda, partida y DOM
+├── game-logic.js   # Reglas puras, resultado de ronda y ganador de partida
+├── statistics.js   # Estadísticas personales y persistencia local
+├── preferences.js  # Preferencias de tema y persistencia local
 ├── sound.js        # SoundEngine: sonidos sintetizados con Web Audio API
+├── tests/          # Pruebas unitarias con node:test
+├── package.json    # Comando npm test, sin dependencias externas
+├── .github/workflows/ci.yml # Tests y chequeo de sintaxis en cada push/PR
 ├── assets/         # Íconos SVG de piedra, papel y tijera
 └── test-results/   # Capturas de verificación visual
 ```
 
 ## Decisiones de diseño
 
-- **Lógica pura separada del DOM**: `getRoundResult()`, `randomChoice()` y `getMatchWinner()` no tocan el documento, así que son triviales de testear.
+- **Reglas puras separadas de la interfaz**: `game-logic.js` contiene `getRoundResult()`, `randomChoice()` y `getMatchWinner()` sin tocar el DOM; se prueban directamente con `node:test`.
+- **Responsabilidades aisladas**: `statistics.js` administra métricas de juego y `preferences.js` administra la paleta visual. Ambos toleran que el almacenamiento del navegador no esté disponible.
 - **Dos máquinas de estado**: la de ronda (`idle → countdown → reveal → idle`) vive dentro de la de partida (jugar hasta que alguien llega a 3). El ganador de la partida es **estado derivado** de los scores, no un flag guardado: no hay nada que sincronizar a mano.
 - **El sonido es un módulo aparte** (`sound.js`): el juego solo dice *qué* suena (`SoundEngine.play('win')`), nunca *cómo*. El `AudioContext` se crea con el primer gesto del usuario (política autoplay) y `stopAll()` garantiza que un reset no deje osciladores colgados. Export explícito a `window`: los `const` de tope nivel no cuelgan de `window` y el módulo quedaría inalcanzable desde tests externos.
 - **Máquina de estados de ronda**: `idle → countdown → reveal → idle`. Un `roundToken` invalida la ronda en curso si se reinicia a mitad de camino (no hay estados fantasma).
@@ -61,8 +68,9 @@ python -m http.server 8000
 
 ## Verificación
 
-- `node --check app.js sound.js` — sintaxis OK.
-- Batería funcional automatizada: **21/21 PASS** (`test-results/v3-tests.png`) — empates que no cuentan, bloqueo durante la ronda y tras el 3, reset a mitad de countdown sin estados ni sonidos colgados, "Jugar de nuevo", y mute persistente tras recargar.
+- `npm test` — **21/21 pruebas unitarias PASS** para reglas del juego, estadísticas y preferencias.
+- CI en GitHub Actions ejecuta `npm test` y `node --check` sobre los módulos JavaScript en cada push y pull request.
+- La captura `test-results/v3-tests.png` documenta la batería funcional previa; no reemplaza las pruebas unitarias versionadas.
 - Capturas de flujo real en `test-results/` (ronda completa, overlay de fin de partida en desktop y mobile 390px).
 
 ## Próximas iteraciones (ideas)
