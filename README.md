@@ -23,6 +23,8 @@ python -m http.server 8000
 - **Pips de partida** bajo cada marcador (○○○ → ●●○), estilo fighting game.
 - **Pantalla de fin de partida** con overlay de victoria/derrota y botón "Jugar de nuevo"; las jugadas quedan bloqueadas.
 - **Sonido sintetizado con Web Audio API** (cero archivos): ticks en la cuenta, ¡YA!, whoosh de revelado, y jingles distintos para ganar, perder y empatar. Botón mute con preferencia guardada en `localStorage`.
+- **Estadísticas personales persistentes**: partidas jugadas y ganadas, efectividad, rondas ganadas, mejor racha y jugada más utilizada. Se guardan en el navegador y sobreviven al reinicio de una partida.
+- **Tres temas visuales**: Neón clásico, Fuego arcade y Matriz digital. La elección queda guardada en el navegador.
 - Marcador de rondas: victorias, empates y derrotas.
 - Cuenta regresiva **3 · 2 · 1 · ¡YA!** gigante sobre la arena, con las manos bombeando.
 - Identidad visual "arena de neón": piso de grilla synthwave y marcos de esquina estilo fighting game (cian para vos, magenta para la CPU).
@@ -75,6 +77,6 @@ python -m http.server 8000
 
 ## Próximas iteraciones (ideas)
 
-- Mejor de 5 / fin de partida.
 - Historial de rondas.
-- Sonido y más "juice" (partículas, shake de pantalla).
+- Logros y desafíos.
+- Dificultades de CPU.
