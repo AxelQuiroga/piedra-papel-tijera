@@ -886,3 +886,151 @@ button {
     opacity: 1;
   }
 }
+
+
+/* ---------- 14. Estadísticas personales y personalización ---------- */
+:root[data-theme="ember"] {
+  --player: #fbbf24;
+  --cpu: #fb7185;
+  --win: #a3e635;
+  --lose: #f43f5e;
+  --draw: #fdba74;
+}
+
+:root[data-theme="matrix"] {
+  --player: #4ade80;
+  --cpu: #60a5fa;
+  --win: #86efac;
+  --lose: #f87171;
+  --draw: #facc15;
+}
+
+.extras {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.personal-stats,
+.personalization {
+  min-width: 0;
+  padding: clamp(0.9rem, 2.5vw, 1.25rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: 0 12px 30px rgba(2, 6, 18, 0.18);
+  backdrop-filter: blur(12px);
+}
+
+.extras__heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.8rem;
+  margin-bottom: 0.9rem;
+}
+
+.extras__heading h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.extras__eyebrow {
+  color: var(--text-dim);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0;
+}
+
+.stat {
+  min-width: 0;
+  padding: 0.7rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: rgba(2, 6, 18, 0.2);
+  text-align: center;
+}
+
+.stat dt {
+  color: var(--text-dim);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.stat dd {
+  overflow-wrap: anywhere;
+  margin: 0.25rem 0 0;
+  color: var(--text);
+  font-size: clamp(1rem, 3.5vw, 1.35rem);
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat:last-child dd {
+  font-size: clamp(0.85rem, 3vw, 1.05rem);
+}
+
+.theme-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.theme-control select {
+  max-width: 65%;
+  padding: 0.65rem 2rem 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.theme-control select:focus-visible {
+  outline: 2px solid var(--player);
+  outline-offset: 3px;
+}
+
+@media (max-width: 26rem) {
+  .stats-grid {
+    gap: 0.4rem;
+  }
+
+  .stat {
+    padding: 0.6rem 0.25rem;
+  }
+
+  .stat dt {
+    font-size: 0.62rem;
+  }
+
+  .extras__eyebrow {
+    font-size: 0.52rem;
+  }
+
+  .theme-control {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .theme-control select {
+    max-width: 100%;
+    width: 100%;
+  }
+}
