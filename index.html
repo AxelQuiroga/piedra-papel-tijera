@@ -22,7 +22,23 @@
     </svg>
   </button>
 
-  <main class="game">
+  <main class="menu screen" id="main-menu" aria-labelledby="menu-title">
+    <div class="menu__brand" aria-hidden="true">
+      <span class="menu__move"><img src="assets/rock-svgrepo-com.svg" alt="" width="64" height="64" /></span>
+      <span class="menu__move menu__move--featured"><img src="assets/paper-svgrepo-com.svg" alt="" width="64" height="64" /></span>
+      <span class="menu__move"><img src="assets/scissors-part-2-svgrepo-com.svg" alt="" width="64" height="64" /></span>
+    </div>
+    <p class="menu__eyebrow">ARCADE CLÁSICO</p>
+    <h1 class="menu__title" id="menu-title">Piedra <span>·</span> Papel <span>·</span> Tijera</h1>
+    <p class="menu__description">Tres jugadas. Una arena. ¿Le ganás a la CPU?</p>
+    <div class="menu__actions">
+      <button class="menu__button menu__button--primary" id="play-button" type="button">Jugar <span aria-hidden="true">→</span></button>
+      <button class="menu__button menu__button--secondary" id="ranking-button" type="button">Ranking personal</button>
+    </div>
+    <p class="menu__hint" id="menu-summary">Tus partidas y resultados quedan guardados en este dispositivo.</p>
+  </main>
+
+  <main class="game screen" id="game-screen" hidden>
 
     <header class="game__header">
       <h1 class="game__title">Piedra · Papel · Tijera</h1>
@@ -98,7 +114,10 @@
       </button>
     </section>
 
-    <button class="reset" id="reset" type="button">Reiniciar partida</button>
+    <div class="game__actions">
+      <button class="reset" id="reset" type="button">Reiniciar partida</button>
+      <button class="menu-return" id="game-menu-button" type="button">Volver al menú</button>
+    </div>
 
   </main>
 
@@ -107,9 +126,39 @@
     <div class="match-end__panel">
       <p class="match-end__title" id="match-end-title"></p>
       <p class="match-end__detail" id="match-end-detail"></p>
-      <button class="match-end__again" id="match-end-again" type="button">Jugar de nuevo</button>
+      <div class="match-end__actions">
+        <button class="match-end__again" id="match-end-again" type="button">Jugar de nuevo</button>
+        <button class="match-end__menu" id="match-end-menu" type="button">Volver al menú</button>
+      </div>
     </div>
   </div>
 
+  <section class="ranking screen" id="ranking-screen" aria-labelledby="ranking-title" hidden>
+    <header class="ranking__header">
+      <p class="menu__eyebrow">TU HISTORIAL</p>
+      <h1 class="ranking__title" id="ranking-title">Ranking <span>personal</span></h1>
+      <p class="ranking__description">Cada partida terminada cuenta. Tus datos se guardan solo en este navegador.</p>
+    </header>
+
+    <dl class="ranking__stats" aria-label="Estadísticas acumuladas">
+      <div class="ranking-stat"><dt>Partidas</dt><dd id="ranking-played">0</dd></div>
+      <div class="ranking-stat"><dt>Victorias</dt><dd id="ranking-wins">0</dd></div>
+      <div class="ranking-stat"><dt>Derrotas</dt><dd id="ranking-losses">0</dd></div>
+      <div class="ranking-stat"><dt>Efectividad</dt><dd id="ranking-rate">0%</dd></div>
+      <div class="ranking-stat"><dt>Mejor racha</dt><dd id="ranking-best-streak">0</dd></div>
+      <div class="ranking-stat"><dt>Empates de ronda</dt><dd id="ranking-draws">0</dd></div>
+    </dl>
+
+    <div class="ranking__history">
+      <div class="ranking__history-heading">
+        <h2>Últimas partidas</h2>
+        <span id="ranking-history-count">0 partidas</span>
+      </div>
+      <p class="ranking__empty" id="ranking-empty">Todavía no jugaste ninguna partida. ¡La primera te espera!</p>
+      <ol class="match-list" id="match-list" aria-label="Historial de partidas"></ol>
+    </div>
+
+    <button class="menu-return menu-return--ranking" id="ranking-menu-button" type="button">← Volver al menú</button>
+  </section>
 </body>
 </html>
