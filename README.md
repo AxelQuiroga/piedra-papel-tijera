@@ -30,6 +30,9 @@ python -m http.server 8000
 - Resultado de cada ronda con frase descriptiva ("Piedra aplasta a Tijera").
 - Tu jugada queda resaltada durante la cuenta regresiva; botones táctiles estilo arcade.
 - Botón para reiniciar la partida (seguro incluso a mitad de ronda: cancela timers y sonidos).
+- **Menú inicial** con acceso directo a jugar o consultar el ranking personal.
+- **Historial persistente de partidas**: cada partida finalizada registra resultado, marcador y fecha; podés jugar todas las partidas que quieras y volver al menú cuando quieras.
+- **Ranking personal** con partidas jugadas, victorias, derrotas, efectividad, mejor racha y empates de ronda, más las últimas 10 partidas. Los datos se guardan en este navegador, sin cuenta ni servidor.
 - Responsive (desktop y mobile).
 
 ## Estructura
@@ -37,7 +40,12 @@ python -m http.server 8000
 ```
 ├── index.html      # Estructura semántica y accesibilidad
 ├── style.css       # Diseño (tokens CSS, animaciones, responsive)
-├── app.js          # Lógica de ronda y de partida
+├── app.js          # Coordinación de pantallas, rondas y partidas
+├── match-history.js # Historial persistente y cálculo de estadísticas
+├── match-session.js # Ciclo de vida de partida y registro idempotente
+├── tests/          # Pruebas unitarias con node:test
+├── package.json    # Comando npm test sin dependencias externas
+├── .github/workflows/ci.yml # Tests y chequeos de sintaxis
 ├── sound.js        # SoundEngine: sonidos sintetizados con Web Audio API
 ├── assets/         # Íconos SVG de piedra, papel y tijera
 └── test-results/   # Capturas de verificación visual
@@ -61,8 +69,9 @@ python -m http.server 8000
 
 ## Verificación
 
-- `node --check app.js sound.js` — sintaxis OK.
-- Batería funcional automatizada: **21/21 PASS** (`test-results/v3-tests.png`) — empates que no cuentan, bloqueo durante la ronda y tras el 3, reset a mitad de countdown sin estados ni sonidos colgados, "Jugar de nuevo", y mute persistente tras recargar.
+- `npm test` — 16 pruebas para historial, estadísticas acumuladas, rachas, persistencia, ciclo de vida de partidas y contratos de integración de la interfaz.
+- GitHub Actions ejecuta `npm test` y chequeos de sintaxis en cada push y pull request.
+- La captura `test-results/v3-tests.png` documenta la batería funcional previa del juego original.
 - Capturas de flujo real en `test-results/` (ronda completa, overlay de fin de partida en desktop y mobile 390px).
 
 ## Próximas iteraciones (ideas)

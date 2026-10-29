@@ -1,0 +1,12 @@
+{
+  "name": "piedra-papel-tijera",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Juego arcade de piedra, papel o tijera en HTML, CSS y JavaScript vanilla.",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
