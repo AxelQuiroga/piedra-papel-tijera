@@ -43,8 +43,11 @@ const REVEAL_PAUSE_REDUCED_MS = 100;
 /* ---------- Estado ---------- */
 const state = { player: 0, cpu: 0, draws: 0, playing: false };
 let roundToken = 0;
-let matchHistory = MatchHistory.loadHistory();
-let currentMatchRecorded = false; // invalida una ronda en curso si se reinicia la partida
+const matchSession = MatchSession.create({
+  initialHistory: MatchHistory.loadHistory(),
+  recordMatch: MatchHistory.recordMatch,
+  saveHistory: MatchHistory.saveHistory,
+});
 
 /* ---------- Utilidades y lógica pura ---------- */
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -75,6 +78,7 @@ const els = {
   playButton: document.getElementById('play-button'),
   rankingButton: document.getElementById('ranking-button'),
   menuSummary: document.getElementById('menu-summary'),
+  storageWarning: document.getElementById('storage-warning'),
   rankingScreen: document.getElementById('ranking-screen'),
   rankingMenuButton: document.getElementById('ranking-menu-button'),
   gameMenuButton: document.getElementById('game-menu-button'),
@@ -114,6 +118,13 @@ const els = {
   matchEndMenu: document.getElementById('match-end-menu'),
 };
 
+function setStorageWarning(visible) {
+  els.storageWarning.hidden = !visible;
+  els.storageWarning.textContent = visible
+    ? 'No se pudieron guardar tus estadísticas en este navegador. Seguirán visibles durante esta sesión, pero podrían perderse al recargar la página.'
+    : '';
+}
+
 /* ---------- Navegación entre pantallas ---------- */
 function showScreen(screenName) {
   els.menu.hidden = screenName !== 'menu';
@@ -126,7 +137,7 @@ function showScreen(screenName) {
 }
 
 function updateMenuSummary() {
-  const summary = MatchHistory.summarizeHistory(matchHistory);
+  const summary = MatchHistory.summarizeHistory(matchSession.getHistory());
   if (summary.matchesPlayed === 0) {
     els.menuSummary.textContent = 'Tus partidas y resultados quedan guardados en este dispositivo.';
     return;
@@ -136,15 +147,16 @@ function updateMenuSummary() {
 }
 
 function renderRanking() {
-  const summary = MatchHistory.summarizeHistory(matchHistory);
+  const history = matchSession.getHistory();
+  const summary = MatchHistory.summarizeHistory(history);
   els.rankingPlayed.textContent = summary.matchesPlayed;
   els.rankingWins.textContent = summary.matchesWon;
   els.rankingLosses.textContent = summary.matchesLost;
   els.rankingRate.textContent = `${summary.winRate}%`;
   els.rankingBestStreak.textContent = summary.bestWinStreak;
   els.rankingDraws.textContent = summary.totalDraws;
-  els.rankingHistoryCount.textContent = `${matchHistory.length} ${matchHistory.length === 1 ? 'partida' : 'partidas'}`;
-  els.rankingEmpty.hidden = matchHistory.length > 0;
+  els.rankingHistoryCount.textContent = `${history.length} ${history.length === 1 ? 'partida' : 'partidas'}`;
+  els.rankingEmpty.hidden = history.length > 0;
   els.matchList.replaceChildren();
 
   const dateFormatter = new Intl.DateTimeFormat('es-AR', {
@@ -152,7 +164,7 @@ function renderRanking() {
     timeStyle: 'short',
   });
 
-  matchHistory.slice(0, 10).forEach((match) => {
+  history.slice(0, 10).forEach((match) => {
     const item = document.createElement('li');
     item.className = `match-row match-row--${match.winner === 'player' ? 'win' : 'lose'}`;
 
@@ -267,6 +279,7 @@ function renderMuteButton() {
  * ============================================================ */
 async function playRound(playerChoice) {
   if (state.playing || getMatchWinner()) return;
+  matchSession.startMatch();
   state.playing = true;
   const token = ++roundToken;
   setChoicesEnabled(false);
@@ -364,17 +377,16 @@ function endMatch(winner) {
   state.playing = false;
   const playerWon = winner === 'player';
 
-  if (!currentMatchRecorded) {
-    matchHistory = MatchHistory.recordMatch(matchHistory, {
-      winner,
-      playerScore: state.player,
-      cpuScore: state.cpu,
-      draws: state.draws,
-    });
-    MatchHistory.saveHistory(matchHistory);
-    currentMatchRecorded = true;
+  const recordResult = matchSession.completeMatch({
+    winner,
+    playerScore: state.player,
+    cpuScore: state.cpu,
+    draws: state.draws,
+  });
+  if (recordResult.recorded) {
     renderRanking();
     updateMenuSummary();
+    setStorageWarning(!recordResult.persisted);
   }
 
   SoundEngine.play(playerWon ? 'win' : 'lose');
@@ -401,12 +413,11 @@ function endMatch(winner) {
 
 function resetGame({ focus = true } = {}) {
   roundToken += 1; // cancela cualquier ronda en curso
+  matchSession.abandonMatch();
   state.player = 0;
   state.cpu = 0;
   state.draws = 0;
   state.playing = false;
-  currentMatchRecorded = false;
-
   SoundEngine.stopAll(); // no quedan sonidos colgados
   hideCountdown();
   els.arena.classList.remove('is-shaking');
