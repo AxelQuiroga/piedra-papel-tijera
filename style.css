@@ -1290,3 +1290,26 @@ button {
     transition: none;
   }
 }
+
+
+/* Aviso de persistencia: no bloquea la partida si el navegador restringe el storage. */
+.storage-warning {
+  position: fixed;
+  z-index: 20;
+  inset: 1rem 1rem auto;
+  width: min(42rem, calc(100% - 2rem));
+  margin-inline: auto;
+  padding: 0.85rem 1rem;
+  color: var(--text);
+  background: rgba(120, 53, 15, 0.96);
+  border: 1px solid rgba(251, 191, 36, 0.6);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.storage-warning[hidden] {
+  display: none;
+}
